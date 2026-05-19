@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Graph-backed code intelligence workflows using CodeGraph MCP with CLI fallback.",
   "author": {
-    "name": "MCSKILLS"
+    "name": "mcontheway"
   },
   "license": "MIT",
   "keywords": [
@@ -23,7 +23,7 @@
     "displayName": "CodeGraph Intelligence",
     "shortDescription": "Graph-backed workflows for exploring and modifying codebases using CodeGraph.",
     "longDescription": "This plugin bundles twelve skills that help you understand and safely change large codebases using CodeGraph. It prefers lightweight MCP tools for targeted work, uses codegraph_explore for unfamiliar areas, and falls back to the CodeGraph CLI when MCP tools are unavailable. Skills include context bootstrapping, impact analysis, request-flow tracing, refactor planning, test targeting, architecture mapping, entry-point finding, bug localization, dependency auditing, public-API guarding, dead-code hunting and change-plan generation. A SessionStart hook checks for the CodeGraph CLI and index at the start of each session.",
-    "developerName": "MCSKILLS",
+    "developerName": "mcontheway",
     "category": "Developer Tools",
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
