@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PLUGIN_ROOT=\"${CODEGRAPH_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; [ -n \"$PLUGIN_ROOT\" ] || PLUGIN_ROOT=\"$(pwd)/codegraph-intelligence\"; \"$PLUGIN_ROOT/scripts/check-codegraph.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
