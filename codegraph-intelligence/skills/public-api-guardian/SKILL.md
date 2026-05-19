@@ -1,0 +1,39 @@
+---
+name: public-api-guardian
+description: Evaluate changes to public API surfaces using CodeGraph to avoid breaking consumers.
+---
+
+Use this skill when the user proposes renaming, removing or altering functions, classes, routes or modules that are exported publicly or consumed by other packages or services.
+
+Goal: Determine whether the change will break downstream consumers and advise on safe migration strategies.
+
+Preferred tools:
+1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_context`, `codegraph_explore`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_impact`.
+2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`, `codegraph context`.
+3. **If neither MCP nor CLI is available**, state that graph-backed API impact analysis is unavailable and proceed with caution.
+
+Workflow:
+1. Verify the graph index is available using `codegraph_status`.
+2. Locate the public API symbol (function, method, class, module, route) using `codegraph_search`. Confirm it is exported or reachable via an HTTP path.
+3. Use `codegraph_context` for surrounding API context. Use `codegraph_explore` only if the API surface belongs to an unfamiliar subsystem.
+4. Inspect the symbol with `codegraph_node` to understand its file path, export declaration and any documentation or annotations.
+5. Use `codegraph_callers` to find direct consumers of the symbol. Distinguish internal callers (within the same codebase) from external callers (other packages, microservices, public entry points).
+6. Use `codegraph_impact` to identify indirect consumers and test files that reference the symbol.
+7. Evaluate change safety:
+   - If no external callers exist, renaming or removal may be safe but still requires internal updates.
+   - If external callers exist, propose migration strategies, such as:
+     - Deprecate the old name and add a wrapper that forwards to the new implementation.
+     - Introduce versioned routes.
+     - Document the change and communicate to consumers.
+   - If dynamic references (reflection, dynamic import) are suspected, warn that static analysis may miss some call sites.
+8. Summarise:
+   - The symbol and its role (public API, library helper, etc.)
+   - Direct and indirect consumers
+   - Tests affected
+   - Recommended approach (e.g. add wrapper, create alias, avoid breaking change)
+   - Required follow-up actions (update docs, notify consumers)
+
+Rules:
+- When in doubt, assume an exported symbol has external consumers.
+- Avoid breaking public APIs without a migration path.
+- Clearly state when the analysis cannot determine all consumers due to dynamic usage.

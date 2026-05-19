@@ -1,0 +1,28 @@
+---
+name: test-target-finder
+description: Identify the minimal set of tests to run after code changes using CodeGraph.
+---
+
+Use this skill after code has been modified to determine which tests should be run to validate the change. It helps avoid running the entire test suite unnecessarily.
+
+Goal: Recommend a focused set of tests that exercises the affected areas and an extended set for regression.
+
+Preferred tools:
+1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_search`, `codegraph_impact`. While CodeGraph does not have a dedicated test-finding tool, combining impact analysis with test discovery gives good results.
+2. **Fallback**: CodeGraph CLI `codegraph affected`, which consumes a list of changed files and returns tests that import them directly or indirectly.
+3. **If neither MCP nor CLI is available**, use conventional heuristics (same directory tests, naming conventions) and clearly state that graph-backed targeting is unavailable.
+
+Workflow:
+1. Identify the set of changed files. Use `git diff --name-only` or the list provided by the user.
+2. Call `codegraph_status` to ensure the index is current.
+3. **Prefer CLI fallback**: run `codegraph affected` with the list of changed files (use `--stdin` to pipe file names) and the `--json` flag to get structured output. Interpret the JSON list of test files.
+4. If using MCP: for each changed symbol or file, run `codegraph_impact` and collect all test files (often under `__tests__`, `tests/` or similar) in the impact radius.
+5. Classify tests:
+   - **Minimal tests**: those directly referencing the changed symbols or changed files.
+   - **Broader regression tests**: those indirectly affected through callers or shared modules.
+6. Present the recommended test list with reasons. Explain why each test is included (direct dependency, indirect dependency, broad regression).
+7. Advise the user to run the minimal set first and the broader set if time permits.
+
+Rules:
+- Do not recommend running the full test suite unless the impact analysis is inconclusive, the change touches shared contracts, or the project has no reliable focused test mapping.
+- If test discovery is incomplete because CodeGraph analysis is unavailable, explicitly state this limitation.
