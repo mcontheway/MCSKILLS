@@ -26,6 +26,29 @@ codegraph init -i
 | **public-api-guardian** | Evaluate changes to exported APIs and propose safe migration strategies. |
 | **dead-code-hunter** | Surface potentially unused code for cleanup, with high- and medium-confidence categories. |
 
+## Auxiliary files
+
+Most skills are intentionally lightweight and only include `SKILL.md`. Higher-risk or repeatable workflows include extra files:
+
+```text
+skills/<skill-name>/
+|-- SKILL.md
+|-- reference/       # Decision rules, templates or exclusion checklists
+`-- scripts/         # Narrow CLI fallback helpers
+```
+
+Current auxiliary files:
+
+| Skill | Auxiliary file | Purpose |
+|---|---|---|
+| `dead-code-hunter` | `reference/false-positive-checklist.md` | Exclude framework hooks, dynamic references, public exports and other common false positives before labeling dead code. |
+| `public-api-guardian` | `reference/public-api-rules.md` | Classify public API surfaces, external consumer risk, breaking change levels and migration strategies. |
+| `impact-analysis` | `reference/report-template.md` | Standardize impact reports and risk levels. |
+| `dependency-audit` | `reference/dependency-rules.md` | Classify inbound/outbound dependencies, coupling signals and cycle severity. |
+| `trace-request-flow` | `reference/framework-routing.md` | Identify common route anchors and label observed vs inferred flow edges. |
+| `test-target-finder` | `reference/test-selection-rules.md` | Classify minimal, caller and regression tests. |
+| `test-target-finder` | `scripts/codegraph-affected.sh` | Wrap `codegraph affected --stdin --json` for CLI fallback. |
+
 ## MCP setup
 
 The plugin includes a `.mcp.json` entry for plugin runtimes that can load bundled MCP server config. The server command is:
