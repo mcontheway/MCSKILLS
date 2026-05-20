@@ -10,10 +10,11 @@ Goal: Provide a structured report of the potential impact of a proposed change s
 Required reference:
 - Use `reference/report-template.md` for the final report structure and risk levels.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_search`, `codegraph_context`, `codegraph_explore`, `codegraph_node`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`, `codegraph context` and `codegraph affected`. Use CLI output only when MCP tools are unavailable.
-3. **If neither MCP nor CLI is available**, state that graph-backed impact analysis cannot be performed and proceed conservatively.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_search`, `codegraph_context`, `codegraph_explore`, `codegraph_node`, `codegraph_callers`, `codegraph_callees` and `codegraph_impact`.
 
 Workflow:
 1. Ensure a fresh graph index by calling `codegraph_status`. If missing, request the user run `codegraph init -i`; if stale, request `codegraph sync`.

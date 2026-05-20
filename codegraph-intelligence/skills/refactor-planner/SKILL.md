@@ -7,10 +7,11 @@ Use this skill when the user wants to refactor a module, class, component, or su
 
 Goal: Create a phased refactor plan that minimises risk and maintains functionality.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_context`, `codegraph_explore`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`, `codegraph context`, `codegraph affected`.
-3. **If neither MCP nor CLI is available**, state that graph-backed refactor planning is unavailable and proceed with caution.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_context`, `codegraph_explore`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_callees` and `codegraph_impact`.
 
 Workflow:
 1. Validate that the CodeGraph index is available and fresh using `codegraph_status`. If not, prompt to run `codegraph init -i` or `codegraph sync`.

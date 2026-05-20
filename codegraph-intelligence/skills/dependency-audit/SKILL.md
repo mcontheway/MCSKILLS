@@ -10,10 +10,11 @@ Goal: Provide insights into module relationships so you can plan refactoring, en
 Required reference:
 - Use `reference/dependency-rules.md` for dependency categories, cycle severity and output fields.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_callees`, `codegraph_explore`. CodeGraph does not yet expose a dedicated dependency graph query, but node metadata and caller/callee queries help identify imports and references.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph files`, `codegraph query`.
-3. **If neither MCP nor CLI is available**, use manual inspection; state that graph-backed dependency analysis is unavailable.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_callees` and `codegraph_explore` for unclear module boundaries. CodeGraph does not yet expose a dedicated dependency graph query, so combine available metadata and caller/callee queries.
 
 Workflow:
 1. Confirm the graph index is current with `codegraph_status`.

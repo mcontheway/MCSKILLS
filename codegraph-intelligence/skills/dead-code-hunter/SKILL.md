@@ -10,10 +10,11 @@ Goal: Provide a list of symbols with zero incoming references and suggest follow
 Required reference:
 - Read `reference/false-positive-checklist.md` before classifying any candidate as high-confidence dead code.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_callers`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`.
-3. **If neither MCP nor CLI is available**, note that graph-backed dead-code detection is unavailable and proceed cautiously.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_files`, `codegraph_search`, `codegraph_node` and `codegraph_callers`.
 
 Workflow:
 1. Ensure the graph index is up to date with `codegraph_status`.

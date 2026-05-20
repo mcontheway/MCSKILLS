@@ -10,10 +10,11 @@ Goal: Produce a sequential overview of the call chain, highlighting key abstract
 Required reference:
 - Use `reference/framework-routing.md` for route anchors, trace layers and observed/inferred evidence labels.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_search`, `codegraph_context`, `codegraph_explore`, `codegraph_node`, `codegraph_callers`, `codegraph_callees`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph context` with an appropriate description and `codegraph query` to locate symbols.
-3. **If neither MCP nor CLI is available**, proceed with caution using conventional navigation and clearly state that graph-backed flow analysis is unavailable.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_search`, `codegraph_context`, `codegraph_explore`, `codegraph_node`, `codegraph_callers` and `codegraph_callees`.
 
 Workflow:
 1. Read `reference/framework-routing.md`.

@@ -28,7 +28,6 @@
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "Use CodeGraph Intelligence to analyze the impact of changing this symbol.",
-      "Use CodeGraph Intelligence to explore this unfamiliar module.",
       "Use CodeGraph Intelligence to trace this request flow.",
       "Use CodeGraph Intelligence to plan a safe refactor."
     ]
