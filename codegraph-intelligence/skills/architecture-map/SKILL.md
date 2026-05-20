@@ -7,10 +7,11 @@ Use this skill to get a high-level overview of how a repository is structured, h
 
 Goal: Produce a concise architectural map highlighting entry points, core modules, infrastructure, shared utilities and external integrations.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_explore`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph files`, `codegraph query`.
-3. **If neither MCP nor CLI is available**, proceed cautiously using conventional directory listing and manual inspection; clearly state limitations.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_files`, `codegraph_search`, `codegraph_node` and `codegraph_explore` for unclear major subsystems.
 
 Workflow:
 1. Verify the availability of the graph index with `codegraph_status`.

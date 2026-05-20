@@ -3,14 +3,15 @@ name: codegraph-context-bootstrap
 description: Build repository context using CodeGraph before starting tasks.
 ---
 
-Use this skill whenever starting a new coding session, exploring an unfamiliar project, or before performing significant changes.
+Use this skill when exploring an unfamiliar project or subsystem, onboarding to a new area, or preparing for significant or cross-module changes. Do not trigger it automatically for every new session or for simple localized tasks.
 
 Goal: Establish a concise, graph-backed context for the current task without scanning the entire repository.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_context`, `codegraph_search`, `codegraph_files`, `codegraph_explore`. These return structured results that Claude or Codex can interpret directly.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph sync`, `codegraph query`, `codegraph context`, `codegraph files`. Use these when MCP tools are unavailable; be prepared to parse text output.
-3. **If neither MCP nor CLI is available**, state that graph-backed context cannot be established and proceed cautiously with minimal file reading.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_context`, `codegraph_search`, `codegraph_files` and `codegraph_explore` for unfamiliar areas.
 
 Workflow:
 1. Call `codegraph_status` (or `codegraph status .`) to check if a graph index exists and is fresh. If missing or stale, request the user run `codegraph init -i` or `codegraph sync`.
@@ -19,7 +20,7 @@ Workflow:
 4. For broad unfamiliar areas, use `codegraph_explore` after search has identified concrete symbols, filenames or short code terms. Avoid natural-language-only explore queries.
 5. Use `codegraph_files` to understand the repository structure and identify important directories and modules.
 6. Summarise the context: key files, modules, classes, functions, entry points, external integrations, and potential risks. Use lists or tables for clarity.
-7. Only after building context should you read source files or edit code.
+7. For tasks that trigger this skill, build context before broad file reading or editing.
 
 Rules:
 - Do not read large numbers of files without first using CodeGraph to narrow down the scope.

@@ -7,10 +7,11 @@ Use this skill when you need to locate where an application or service starts ex
 
 Goal: Identify the files, functions or scripts that act as entry points into the system, whether they are web servers, background workers, CLI commands or scheduled jobs.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_explore`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph files`, `codegraph query`.
-3. **If neither MCP nor CLI is available**, use conventional heuristics (search for `main`, `server`, etc.) and note that the result may be incomplete.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_files`, `codegraph_search`, `codegraph_node`, `codegraph_callers` and `codegraph_explore` for unclear framework wiring.
 
 Workflow:
 1. Ensure the graph index is available with `codegraph_status`.

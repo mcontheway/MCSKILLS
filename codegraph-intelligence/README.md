@@ -31,6 +31,9 @@ codegraph init -i
 Most skills are intentionally lightweight and only include `SKILL.md`. Higher-risk or repeatable workflows include extra files:
 
 ```text
+reference/
+`-- codegraph-tool-policy.md
+
 skills/<skill-name>/
 |-- SKILL.md
 |-- reference/       # Decision rules, templates or exclusion checklists
@@ -41,6 +44,7 @@ Current auxiliary files:
 
 | Skill | Auxiliary file | Purpose |
 |---|---|---|
+| all skills | `reference/codegraph-tool-policy.md` | Centralizes common CodeGraph tool selection, fallback and unavailable handling. |
 | `dead-code-hunter` | `reference/false-positive-checklist.md` | Exclude framework hooks, dynamic references, public exports and other common false positives before labeling dead code. |
 | `public-api-guardian` | `reference/public-api-rules.md` | Classify public API surfaces, external consumer risk, breaking change levels and migration strategies. |
 | `impact-analysis` | `reference/report-template.md` | Standardize impact reports and risk levels. |
@@ -110,7 +114,15 @@ Use `codegraph_context` for focused task context. Use `codegraph_explore` only f
 
 The plugin provides a `SessionStart` hook that executes `scripts/check-codegraph.sh`. The hook checks whether the CodeGraph CLI is installed and whether the current project contains a `.codegraph` index, then prints status. It never performs heavy indexing itself.
 
-The hook resolves the plugin root from `CODEGRAPH_PLUGIN_ROOT`, then `CLAUDE_PLUGIN_ROOT`, then a local development fallback. The project root is resolved from the hook argument, `CODEX_CWD`, `CODEX_WORKSPACE_DIR`, `CLAUDE_PROJECT_DIR` or the current working directory, with a Git root normalization when available.
+The hook resolves the plugin root from `CODEGRAPH_PLUGIN_ROOT`, then `CLAUDE_PLUGIN_ROOT`. It no longer guesses from the current working directory, because installed plugins may live outside the project root. Runtimes that do not set `CLAUDE_PLUGIN_ROOT` must set `CODEGRAPH_PLUGIN_ROOT` to the installed `codegraph-intelligence` directory for the hook to run. If neither variable is set, the hook prints a skip message and exits successfully.
+
+Example:
+
+```bash
+export CODEGRAPH_PLUGIN_ROOT="/absolute/path/to/codegraph-intelligence"
+```
+
+The project root is resolved from the hook argument, `CODEX_CWD`, `CODEX_WORKSPACE_DIR`, `CLAUDE_PROJECT_DIR` or the current working directory, with a Git root normalization when available.
 
 ## MCP tools
 

@@ -10,10 +10,11 @@ Goal: Determine whether the change will break downstream consumers and advise on
 Required reference:
 - Read `reference/public-api-rules.md` before deciding whether a change is safe, breaking or migration-only.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_context`, `codegraph_explore`, `codegraph_search`, `codegraph_node`, `codegraph_callers`, `codegraph_impact`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`, `codegraph context`.
-3. **If neither MCP nor CLI is available**, state that graph-backed API impact analysis is unavailable and proceed with caution.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_context`, `codegraph_explore`, `codegraph_search`, `codegraph_node`, `codegraph_callers` and `codegraph_impact`.
 
 Workflow:
 1. Verify the graph index is available using `codegraph_status`.

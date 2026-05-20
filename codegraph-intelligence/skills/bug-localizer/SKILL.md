@@ -7,10 +7,11 @@ Use this skill when the user describes a bug (e.g. "users cannot reset password"
 
 Goal: Produce a short list of functions, classes or modules that are likely relevant to the bug, so you can focus your debugging efforts.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_search`, `codegraph_context`, `codegraph_explore`, `codegraph_node`, `codegraph_callers`, `codegraph_callees`.
-2. **Fallback**: CodeGraph CLI commands: `codegraph status`, `codegraph query`, `codegraph context`.
-3. **If neither MCP nor CLI is available**, use keyword search and directory heuristics, and explain that results may be incomplete.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_search`, `codegraph_context`, `codegraph_node`, `codegraph_callers`, `codegraph_callees` and `codegraph_explore` for unfamiliar bug areas.
 
 Workflow:
 1. Summarise the bug description into a few keywords (e.g. for "users cannot reset password", keywords might be "password reset", "reset password", "token", "forgotPassword", "resetPassword", etc.).

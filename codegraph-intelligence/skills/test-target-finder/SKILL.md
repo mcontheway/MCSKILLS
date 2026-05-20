@@ -11,10 +11,11 @@ Auxiliary files:
 - Use `scripts/codegraph-affected.sh` as the CLI fallback wrapper when MCP test discovery is unavailable or `codegraph affected` is preferred.
 - Use `reference/test-selection-rules.md` to classify minimal, caller and regression tests.
 
-Preferred tools:
-1. **CodeGraph MCP tools**: `codegraph_status`, `codegraph_search`, `codegraph_impact`. While CodeGraph does not have a dedicated test-finding tool, combining impact analysis with test discovery gives good results.
-2. **Fallback**: CodeGraph CLI `codegraph affected`, which consumes a list of changed files and returns tests that import them directly or indirectly.
-3. **If neither MCP nor CLI is available**, use conventional heuristics (same directory tests, naming conventions) and clearly state that graph-backed targeting is unavailable.
+Shared tool policy:
+- Follow `../../reference/codegraph-tool-policy.md` for common CodeGraph tool selection, fallback and unavailable handling.
+
+Task-specific tools:
+- Prefer `codegraph_impact` through MCP or `scripts/codegraph-affected.sh` for CLI fallback. CodeGraph does not yet expose a dedicated test-finding MCP tool.
 
 Workflow:
 1. Identify the set of changed files. Use `git diff --name-only HEAD` or the list provided by the user.
