@@ -1,0 +1,32 @@
+critical_paths:
+  - src/billing/**
+  - src/auth/**
+  - src/payments/**
+
+ignore_paths:
+  - vendor/**
+  - generated/**
+  - snapshots/**
+  - dist/**
+  - build/**
+  - node_modules/**
+
+architecture_boundaries:
+  - from: src/ui/**
+    forbidden_imports:
+      - src/db/**
+      - src/infrastructure/**
+
+thresholds:
+  function_lines: 80
+  class_lines: 300
+  parameter_count: 6
+  cyclomatic_complexity: 15
+  nested_depth: 4
+  duplicate_min_lines: 8
+
+known_intentional_debt:
+  - id: legacy-auth-compat
+    path: src/auth/legacy/**
+    reason: Kept for migration compatibility.
+    revisit_trigger: Remove after v2 auth rollout.
