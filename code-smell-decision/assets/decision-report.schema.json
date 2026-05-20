@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code Smell Decision Report",
+  "type": "object",
+  "required": ["target", "overall_maintainability", "findings"],
+  "properties": {
+    "target": { "type": "string" },
+    "overall_maintainability": {
+      "type": "string",
+      "enum": ["Low Risk", "Medium Risk", "High Risk", "Unknown"]
+    },
+    "highest_risk_areas": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/decision_finding" }
+    }
+  },
+  "$defs": {
+    "decision_finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "location",
+        "smell_type",
+        "risk",
+        "debt_classification",
+        "decision",
+        "priority",
+        "recommended_action",
+        "follow_up_trigger"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "location": { "type": "string" },
+        "smell_type": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "risk": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Unknown"]
+        },
+        "debt_classification": {
+          "type": "string",
+          "enum": [
+            "code smell",
+            "technical debt",
+            "intentional technical debt",
+            "accidental technical debt",
+            "acceptable compromise"
+          ]
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "Fix Now",
+            "Refactor Before Next Change",
+            "Track as Tech Debt",
+            "Accept / Ignore",
+            "Needs Human Judgment"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["P1", "P2", "P3", "P4"]
+        },
+        "recommended_action": { "type": "string" },
+        "minimum_safe_change": { "type": "string" },
+        "tests_needed": { "type": "string" },
+        "create_issue": { "type": "boolean" },
+        "suggested_issue_title": { "type": "string" },
+        "suggested_issue_description": { "type": "string" },
+        "acceptance_criteria": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "follow_up_trigger": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

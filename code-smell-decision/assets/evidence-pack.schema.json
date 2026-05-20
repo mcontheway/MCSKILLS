@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code Smell Evidence Pack",
+  "type": "object",
+  "required": ["target", "generated_by", "findings"],
+  "properties": {
+    "target": { "type": "string" },
+    "generated_by": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "source_reports": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["id", "type", "location", "confidence"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "location": {
+          "type": "object",
+          "required": ["file"],
+          "properties": {
+            "file": { "type": "string" },
+            "start_line": { "type": "integer", "minimum": 1 },
+            "end_line": { "type": "integer", "minimum": 1 },
+            "symbol": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "detection_evidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "engineering_evidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "unknown"]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
