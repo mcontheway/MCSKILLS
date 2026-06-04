@@ -1,12 +1,12 @@
 # Follow Goal Spec
 
-Use this reference to write or validate `/goal` instructions against OpenAI's Codex "Follow a goal" guidance.
+Use this reference to write or validate Codex goals against OpenAI's "Follow a goal" guidance and the current skill policy.
 
 Source: https://developers.openai.com/codex/use-cases/follow-goals
 
 ## Core Rule
 
-Use `/goal` when a task needs Codex to keep working across turns toward a verifiable stopping condition.
+Use a goal when a task needs Codex to keep working across turns toward a verifiable stopping condition.
 
 The starter pattern is:
 
@@ -14,61 +14,90 @@ The starter pattern is:
 /goal Complete [objective] without stopping until [verifiable end state].
 ```
 
+## Output Modes
+
+There are two supported output modes:
+
+- `copyable_goal_command`: for human users copying a command into Codex Desktop, CLI, or IDE. Output exactly one physical line starting with `/goal `. Put the complete contract in the first natural paragraph because slash-command parsing may only set that paragraph as the objective.
+- `active_goal_api`: for agents/tools that can create an active goal directly. The API objective may be multi-paragraph, but it must be self-contained. Do not rely on assistant prose outside the objective to carry required instructions.
+
 ## Good Fit
 
 Use a goal for:
 
 - Long-running coding work with a clear success condition and validation loop.
-- Code migrations, large refactors, deployment retry loops, experiments, games, prototypes, and side projects where Codex can keep making scoped progress.
-- Long experiments with clear success criteria.
+- Code migrations, large refactors, deployment retry loops, experiments, prototypes, and side projects where Codex can keep making scoped progress.
+- Research, data analysis, cleanup, or triage work when evidence can prove completion.
 
-Avoid a goal for a loose list of unrelated work.
+Avoid a goal for:
+
+- One-line edits or simple explanations.
+- Loose lists of unrelated work.
+- Vague "make it better" tasks that lack a verification surface.
+- Decisions that mostly depend on human judgment unless the goal is to prepare evidence or options.
+
+For unclear goals, ask one concise question or make a conservative assumption.
 
 ## Required Contract
 
 A good goal is bigger than one prompt but smaller than an open-ended backlog. It should define:
 
-- What Codex should achieve.
-- What Codex should not change.
-- How Codex should validate progress.
-- When Codex should stop.
+- Outcome: the final state Codex should achieve.
+- Verification surface: commands, artifacts, reports, screenshots, external statuses, or other evidence that proves progress and completion.
+- Constraints: behavior, business, safety, data, permission, API, or quality properties Codex must not break.
+- Boundaries: allowed and forbidden files, modules, systems, accounts, actions, or write scopes.
+- Iteration policy: how Codex should make attempts, rerun checks, report evidence, and avoid repeating failed approaches.
+- Blocked stop condition: when Codex should pause instead of guessing.
 
-## Setup Loop
+Add inputs/context only when they clarify the starting point. Say "read first" only when source order matters.
 
-1. Name one objective and one stopping condition.
-2. Point Codex at the files, docs, issue, logs, or plan it must read first.
-3. Define the commands or artifacts that prove progress.
-4. Tell Codex to work in checkpoints and keep a short progress log.
-5. Inspect status while it runs.
-6. Pause, resume, or clear the goal when the run is done, blocked, or changing direction.
+## Action Policy
 
-## Status Updates
+External or high-impact actions are not automatically forbidden. If the user's objective requires actions such as sending messages, closing issues, merging PRs, deploying, deleting, changing permissions, or writing external systems, include an action policy:
+
+- What actions are allowed.
+- Which objects or systems are in scope.
+- What remains forbidden.
+- Which actions require confirmation.
+- What evidence Codex should report for actions taken, drafted, skipped, or blocked.
+
+Require confirmation for irreversible, production, security, privacy, payment, permission, bulk, or ambiguous actions unless the user's authorization is explicit and scoped.
+
+## Contract Templates
+
+Chinese copyable command:
+
+```text
+/goal 完成[Outcome]。输入/上下文：[Inputs]。验证：[Verification surface]。约束：[Constraints]。边界：[Boundaries]。迭代：[Iteration policy]。阻塞：[Blocked stop condition]。完成：[Completion condition]。
+```
+
+English copyable command:
+
+```text
+/goal Achieve [Outcome]. Inputs/context: [Inputs]. Verification: [Verification surface]. Constraints: [Constraints]. Boundaries: [Boundaries]. Iteration: [Iteration policy]. Blocked: [Blocked stop condition]. Done: [Completion condition].
+```
+
+Do not mechanically fill every label if a shorter command is clearer. The six core elements still need to be present in substance.
+
+## Status And Completion
 
 Ask for compact progress reports that name:
 
-- Current checkpoint.
+- Current attempt or checkpoint.
 - What was verified.
 - What remains.
 - Whether Codex is blocked.
 
-If the status becomes vague, tighten the goal: name the next checkpoint, the command or artifact that proves it, and what should cause Codex to pause.
+Before completion, the goal must have evidence that matches the scope of the objective. Tests, reports, external statuses, or command outputs count only when they actually cover the requirement being claimed.
 
-## Examples
+## Failure Controls
 
-Migration:
+Avoid vague stop conditions such as "until everything is done" unless paired with concrete checks.
 
-```text
-/goal Migrate this project from [legacy stack or system] to [target stack or system]. Make sure all screens stay exactly the same visually, using playwright interactive to verify the output.
-```
+Useful blocked conditions include:
 
-Prototype:
-
-```text
-/goal Implement PLAN.md, creating tests for each milestone and verifying the output with playwright interactive. [include reference screens as needed]
-```
-
-Prompt optimization:
-
-```text
-/goal Optimize the prompts in [prompt file or directory] until the eval suite reaches [target score or pass rate]. After each change, run [eval command], inspect the failing cases, and keep the prompt edits minimal and targeted. Stop when the target is met or when further prompt changes would need product or policy guidance.
-```
+- Required access, credentials, files, data, or services are missing.
+- The next step needs a product, legal, security, privacy, or business decision.
+- A dangerous or irreversible action is needed outside the authorized action policy.
+- The same focused approach fails repeatedly without new evidence.
+- Verification is blocked by infrastructure or external systems.
