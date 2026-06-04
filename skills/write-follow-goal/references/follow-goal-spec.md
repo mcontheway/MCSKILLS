@@ -1,103 +1,103 @@
-# Follow Goal Spec
+# 目标规范
 
-Use this reference to write or validate Codex goals against OpenAI's "Follow a goal" guidance and the current skill policy.
+本参考用于按照 OpenAI《Follow a goal》指南和当前 skill 策略，编写或校验 Codex goal。
 
-Source: https://developers.openai.com/codex/use-cases/follow-goals
+来源：https://developers.openai.com/codex/use-cases/follow-goals
 
-## Core Rule
+## 核心规则
 
-Use a goal when a task needs Codex to keep working across turns toward a verifiable stopping condition.
+当任务需要 Codex 跨多轮持续推进，直到达到可验证的停止条件时，才适合使用 goal。
 
-The starter pattern is:
+基础模式是：
 
 ```text
 /goal Complete [objective] without stopping until [verifiable end state].
 ```
 
-## Output Modes
+## 输出模式
 
-There are two supported output modes:
+支持两种输出模式：
 
-- `copyable_goal_command`: for human users copying a command into Codex Desktop, CLI, or IDE. Output exactly one physical line starting with `/goal `. Put the complete contract in the first natural paragraph because slash-command parsing may only set that paragraph as the objective.
-- `active_goal_api`: for agents/tools that can create an active goal directly. The API objective may be multi-paragraph, but it must be self-contained. Do not rely on assistant prose outside the objective to carry required instructions.
+- `copyable_goal_command`：面向人类用户复制到 Codex Desktop、CLI 或 IDE 的命令。必须输出一条物理单行，并以 `/goal ` 开头。完整契约必须放在第一个自然段内，因为 slash command 解析可能只把该段设置为 objective。
+- `active_goal_api`：面向可以直接创建 active goal 的 agent 或 tool。API objective 可以是多段，但必须自包含。不要依赖 objective 外的 assistant 正文承载必要要求。
 
-## Good Fit
+## 适用场景
 
-Use a goal for:
+适合使用 goal 的任务：
 
-- Long-running coding work with a clear success condition and validation loop.
-- Code migrations, large refactors, deployment retry loops, experiments, prototypes, and side projects where Codex can keep making scoped progress.
-- Research, data analysis, cleanup, or triage work when evidence can prove completion.
+- 有明确成功条件和验证循环的长周期编码任务。
+- 代码迁移、大型重构、部署重试循环、实验、原型和可以持续限定范围推进的 side project。
+- 研究、数据分析、清理或分诊任务，前提是有证据能够证明完成。
 
-Avoid a goal for:
+不适合使用 goal 的任务：
 
-- One-line edits or simple explanations.
-- Loose lists of unrelated work.
-- Vague "make it better" tasks that lack a verification surface.
-- Decisions that mostly depend on human judgment unless the goal is to prepare evidence or options.
+- 一行修改或简单解释。
+- 松散且互不相关的任务清单。
+- 缺少验证面的模糊“让它更好”类任务。
+- 主要依赖人工判断的决策，除非 goal 是为了准备证据或选项。
 
-For unclear goals, ask one concise question or make a conservative assumption.
+对于不清晰的 goal，问一个简洁问题，或做保守假设。不要默认建议用户先执行 `/plan`；只有在用户明确需要规划命令时才输出 `/plan`。
 
-## Required Contract
+## 必要契约
 
-A good goal is bigger than one prompt but smaller than an open-ended backlog. It should define:
+好的 goal 应该大于一次普通 prompt，但小于开放式待办列表。它应定义：
 
-- Outcome: the final state Codex should achieve.
-- Verification surface: commands, artifacts, reports, screenshots, external statuses, or other evidence that proves progress and completion.
-- Constraints: behavior, business, safety, data, permission, API, or quality properties Codex must not break.
-- Boundaries: allowed and forbidden files, modules, systems, accounts, actions, or write scopes.
-- Iteration policy: how Codex should make attempts, rerun checks, report evidence, and avoid repeating failed approaches.
-- Blocked stop condition: when Codex should pause instead of guessing.
+- 结果（Outcome）：Codex 应达成的最终状态。
+- 验证面（Verification surface）：用于证明进展和完成的命令、产物、报告、截图、外部状态或其他证据。
+- 约束（Constraints）：不得破坏的行为、业务、安全、数据、权限、API 或质量属性。
+- 边界（Boundaries）：允许和禁止触碰的文件、模块、系统、账号、动作或写入范围。
+- 迭代策略（Iteration policy）：Codex 如何尝试、重跑检查、报告证据，并避免重复失败路径。
+- 阻塞停止条件（Blocked stop condition）：Codex 应在什么情况下暂停，而不是继续猜测。
 
-Add inputs/context only when they clarify the starting point. Say "read first" only when source order matters.
+只有当输入/上下文能澄清起点时才加入。只有在资料顺序确实重要时，才写“先阅读”或“先检查”。
 
-## Action Policy
+## 动作授权策略
 
-External or high-impact actions are not automatically forbidden. If the user's objective requires actions such as sending messages, closing issues, merging PRs, deploying, deleting, changing permissions, or writing external systems, include an action policy:
+外部或高影响动作不应被自动禁止。如果用户目标需要发送消息、关闭 issue、merge PR、部署、删除、修改权限或写入外部系统等动作，应加入动作授权策略：
 
-- What actions are allowed.
-- Which objects or systems are in scope.
-- What remains forbidden.
-- Which actions require confirmation.
-- What evidence Codex should report for actions taken, drafted, skipped, or blocked.
+- 允许执行哪些动作。
+- 哪些对象或系统在范围内。
+- 哪些动作仍然禁止。
+- 哪些动作需要确认。
+- Codex 应为已执行、已草拟、已跳过或被阻塞的动作报告什么证据。
 
-Require confirmation for irreversible, production, security, privacy, payment, permission, bulk, or ambiguous actions unless the user's authorization is explicit and scoped.
+除非用户授权明确且范围具体，否则不可逆、生产、安全、隐私、付款、权限、批量或含义模糊的动作都应要求确认。
 
-## Contract Templates
+## 契约模板
 
-Chinese copyable command:
+中文可复制命令：
 
 ```text
-/goal 完成[Outcome]。输入/上下文：[Inputs]。验证：[Verification surface]。约束：[Constraints]。边界：[Boundaries]。迭代：[Iteration policy]。阻塞：[Blocked stop condition]。完成：[Completion condition]。
+/goal 完成[结果]。输入/上下文：[输入和上下文]。验证：[验证面]。约束：[约束]。边界：[边界]。迭代：[迭代策略]。阻塞：[阻塞停止条件]。完成：[完成条件]。
 ```
 
-English copyable command:
+英文可复制命令：
 
 ```text
 /goal Achieve [Outcome]. Inputs/context: [Inputs]. Verification: [Verification surface]. Constraints: [Constraints]. Boundaries: [Boundaries]. Iteration: [Iteration policy]. Blocked: [Blocked stop condition]. Done: [Completion condition].
 ```
 
-Do not mechanically fill every label if a shorter command is clearer. The six core elements still need to be present in substance.
+如果更短的命令更清晰，不要机械填满每个标签。但六个核心要素必须在实质上存在。
 
-## Status And Completion
+## 状态与完成
 
-Ask for compact progress reports that name:
+进展报告应简洁说明：
 
-- Current attempt or checkpoint.
-- What was verified.
-- What remains.
-- Whether Codex is blocked.
+- 当前尝试或检查点。
+- 已验证什么。
+- 还剩什么。
+- Codex 是否被阻塞。
 
-Before completion, the goal must have evidence that matches the scope of the objective. Tests, reports, external statuses, or command outputs count only when they actually cover the requirement being claimed.
+完成前，goal 必须有与 objective 范围匹配的证据。测试、报告、外部状态或命令输出，只有在确实覆盖所声明的要求时才算有效证据。
 
-## Failure Controls
+## 失败控制
 
-Avoid vague stop conditions such as "until everything is done" unless paired with concrete checks.
+避免使用“直到全部完成”这类模糊停止条件，除非同时配有具体检查。
 
-Useful blocked conditions include:
+有用的阻塞条件包括：
 
-- Required access, credentials, files, data, or services are missing.
-- The next step needs a product, legal, security, privacy, or business decision.
-- A dangerous or irreversible action is needed outside the authorized action policy.
-- The same focused approach fails repeatedly without new evidence.
-- Verification is blocked by infrastructure or external systems.
+- 缺少必要访问权限、凭据、文件、数据或服务。
+- 下一步需要产品、法务、安全、隐私或业务决策。
+- 需要执行动作授权策略之外的危险或不可逆动作。
+- 同一个聚焦方案反复失败，且没有新证据。
+- 验证被基础设施或外部系统阻塞。
