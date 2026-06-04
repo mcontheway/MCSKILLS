@@ -9,7 +9,7 @@ This repository collects Codex skills and Codex plugins.
 Standalone skills live under `skills/`. They are kept as lightweight reusable
 assets and are not listed in the plugin marketplace.
 
-- [write-follow-goal](./skills/write-follow-goal/SKILL.md) - Draft and refine durable `/goal` instructions.
+- [write-a-goal](./skills/write-a-goal/SKILL.md) - Draft, refine, or set durable Codex goals.
 - [code-smell-decision](./skills/code-smell-decision/SKILL.md) - Discover code smells, collect engineering evidence, and decide whether to fix, defer, track as debt, accept, or escalate.
 
 ## Plugins

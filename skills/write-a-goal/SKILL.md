@@ -1,6 +1,6 @@
 ---
-name: write-follow-goal
-description: Draft, refine, or set Codex goals that follow OpenAI's "Follow a goal" guidance. Before drafting, resolve the output language from the latest user-facing request. Draft copyable single-line /goal commands for users, or create self-contained active goal API objectives when explicitly requested. If the user writes Chinese, mixes languages, or language is unclear, output Chinese. Preserve commands, paths, code identifiers, URLs, issue IDs, exact quoted literals, and identifiers such as /goal, API, objective, copyable_goal_command, and active_goal_api.
+name: write-a-goal
+description: 起草、优化或设置符合 OpenAI《Follow a goal》指南的 Codex goal。起草前先根据最新用户请求确定输出语言。为用户起草可复制的单行 /goal 命令；用户明确要求时，通过 goal 工具/API 创建自包含的 active goal objective。用户使用中文、混合语言或语言不明确时，输出中文。保留命令、路径、代码标识符、URL、issue ID、精确引用，以及 /goal、API、objective、copyable_goal_command、active_goal_api 等标识原文。
 ---
 
 # 编写 Codex Goal

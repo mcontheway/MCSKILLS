@@ -8,7 +8,7 @@
 
 独立 skill 放在 `skills/` 下。它们作为轻量复用资产保留，不进入 plugin marketplace。
 
-- [write-follow-goal](./skills/write-follow-goal/SKILL.md) - 起草和打磨可持续执行的 `/goal` 指令。
+- [write-a-goal](./skills/write-a-goal/SKILL.md) - 起草、优化或设置可持续推进的 Codex goal。
 - [code-smell-decision](./skills/code-smell-decision/SKILL.md) - 发现代码坏味道，收集工程证据，并判断应立即修复、延后处理、记录技术债、接受现状或交给人工判断。
 
 ## Plugins
