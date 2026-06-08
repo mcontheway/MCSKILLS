@@ -62,6 +62,112 @@ Create a new goal with this exact objective:
 After creation, run get_goal and report objective/status to scheduler_thread_id. Do not treat the old goal as active.
 ```
 
+## Recovery Checkpoint Record / 恢复检查点记录
+
+```text
+recovery_prompt:
+- worker_id:
+- thread_id:
+- sent_at:
+- expected_report_type: <worksite/head report | rebase result | metadata repair readback | validation result>
+- target_head:
+- target_base:
+- target_pr_or_task:
+- next_heartbeat_decision: if no scheduler-readable report or no fact change, mark worker-stalled
+```
+
+## Replacement Worker Prompt / 替换 Worker Prompt
+
+```text
+Worker identity:
+- worker id: <replacement id>
+- replaces worker id/thread_id: <stalled worker>
+- scheduler_thread_id: <scheduler thread id>
+- title: [<Project/Round>][<replacement id>][Recovery][<PR/Task>] <short task>
+
+Objective:
+"<exact recovery objective: rebase / metadata repair / validation / PR body readback / push only>"
+
+Boundaries:
+- state starts as replacement-planned, then replacement-active after worksite + goal self-check
+- allowed write paths:
+- forbidden: expand original scope, run guardian/formal review/controlled merge, modify unrelated units
+- gate_owner: scheduler
+
+Report `recovered-waiting-scheduler-gate` when recovery is complete, head/base/body are read back, and hosted checks are green.
+```
+
+## Scheduler Takeover Report / Scheduler 接管回报
+
+```text
+Scheduler Report:
+State: scheduler-controlled-takeover
+Original worker: <worker_id / thread_id>
+Reason: worker-stalled
+Concurrent writes: <none confirmed>
+Worktree status: <clean, no rebase/merge/cherry-pick>
+Branch/head/PR alignment: <branch / head / base / PR>
+Recovery scope: <rebase / metadata repair / validation / push only>
+Validation: <commands and result>
+PR body readback: <aligned / mismatch>
+Hosted checks: <green / pending / failed>
+Next scheduler action: <run scheduler-owned gate | create replacement | classify blocker>
+```
+
+## Fact Table Readback / 事实表读回
+
+```text
+Scheduler Fact Table:
+- worker_id:
+- thread_id:
+- worksite:
+- branch:
+- base_sha:
+- merge_base:
+- current_head_sha:
+- PR number/state/head/base:
+- issue state:
+- worker_state:
+- next_owner:
+- next_action:
+- blocker_classification:
+- last_readback_at:
+- fact_source_priority: live host/local git readback > repo carrier current files > newest scheduler-authored state > newest worker report > older heartbeat summary
+```
+
+## Head-Bound Artifact Refresh Report / Head 绑定刷新回报
+
+```text
+Scheduler Report:
+State: recovered-waiting-scheduler-gate
+Head: <current_head_sha>
+Base: <base_sha>
+PR headRefOid: <readback oid>
+PR body machine carrier head_sha: <readback sha>
+PR metadata preflight: <pass/fail>
+compare-body: <pass/fail>
+review artifact stale: <yes/no>
+hosted gate stale-run: <yes/no>
+head_bound_artifacts_refreshed: <yes/no>
+Next scheduler action: <run scheduler-owned gate | refresh artifacts | classify blocker>
+```
+
+## Hosted Failure Classification / Hosted 失败分类
+
+```text
+Scheduler Report:
+State: <waiting-scheduler | scheduler-controlled-takeover>
+Hosted checks: <failed check/run id>
+hosted_failure_classification: <carrier drift | shadow drift | review stale | PR metadata drift | host stale run | code semantic failure>
+Evidence:
+- local validation:
+- PR/body/head readback:
+- repo carrier/shadow readback:
+- review artifact head:
+Next scheduler action: <repair | rerun after repair | replacement worker | takeover>
+Rerun allowed before classification: no
+```
+
 ## Delegation Fallback / 委派兜底
 
 ```xml
