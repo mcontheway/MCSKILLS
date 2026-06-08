@@ -108,6 +108,31 @@ Boundaries:
 Report `recovered-waiting-scheduler-gate` when recovery is complete, head/base/body are read back, and hosted checks are green.
 ```
 
+## Pending Materialization Stalled Record / Worker 物化失败记录
+
+```text
+Scheduler Report:
+State: pending-materialization-stalled
+pending_materialization_status: pending-materialization-stalled
+Requested worker:
+- worker_id:
+- pending_worktree_id:
+- title:
+- branch:
+- base:
+Readback attempted:
+- thread search:
+- worksite search:
+- branch/head:
+- startup report:
+Reason: no readable worker thread/worksite after short readback
+Heartbeat Decision:
+- heartbeat_decision: action_taken | global_blocker
+- action_taken: create_thread | create_replacement_worker | update_heartbeat | none
+- global_blocker: <tool unavailable / permission / environment / N/A>
+Next scheduler action: <recreate worker | recover worker | report tool blocker>
+```
+
 ## Scheduler Takeover Report / Scheduler 接管回报
 
 ```text
@@ -169,6 +194,7 @@ Current scheduler action: waiting for replacement report
 Scheduler Fact Table:
 - worker_id:
 - thread_id:
+- pending_worktree_id:
 - worksite:
 - branch:
 - base_sha:
@@ -181,6 +207,7 @@ Scheduler Fact Table:
 - next_action:
 - blocker_classification:
 - last_readback_at:
+- pending_materialization_status:
 - fact_source_priority: live host/local git readback > repo carrier current files > newest scheduler-authored state > newest worker report > older heartbeat summary
 ```
 
@@ -272,12 +299,21 @@ Top Goal:
 Current Workers:
 - worker_id:
 - thread_id:
+- pending_worktree_id:
 - branch / worksite:
 - head / base:
 - state:
 - blocker:
 - next_scheduler_action:
 - next_worker_action:
+
+Facts Consumed Before This Heartbeat:
+- worker_reports:
+- live_pr_or_task_readback:
+- local_git_readback:
+- issue_state:
+- repo_carrier_state:
+- stale_heartbeat_corrected: yes|no
 
 Planned But Not Started:
 <unstarted items and start conditions>
@@ -290,5 +326,16 @@ Heartbeat Action:
 2. If waiting-scheduler-gate, run or authorize the exact next gate.
 3. If blocked, classify root cause and send a correction or new objective.
 4. If current batch is complete, create the next dependency-ready worker.
-5. If prompt is stale, update automation before more scheduling.
+5. If a pending worktree has no readable thread/worksite after short readback, mark pending-materialization-stalled and recreate/recover.
+6. If prompt is stale, update automation before more scheduling.
+
+Heartbeat Decision:
+- heartbeat_decision: action_taken | valid_wait | global_blocker
+- action_taken: <create_thread | send_message_to_thread | run_scheduler_gate | controlled_merge_readback | mark_worker_stalled | create_replacement_worker | update_heartbeat | none>
+- valid_wait_reason: <same_hosted_run | active_worker_recent_output | external_bounded_wait | N/A>
+- effective_progress_subject: <worker thread/run/PR/head or N/A>
+- global_blocker: <classification or N/A>
+- next_owner:
+- next_action_by:
+- next_decision_at:
 ```

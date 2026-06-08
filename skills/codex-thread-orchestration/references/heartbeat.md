@@ -48,9 +48,10 @@ Dependency / Ownership:
 - schema / contract / metadata that must not be duplicated:
 
 Current Workers:
-<only active / waiting-hosted / stopped_at_waiting_scheduler_gate / waiting-scheduler / waiting-on-worker / worker-stalled / worker-stalled/abandoned / replacement-planned / replacement-active / scheduler-takeover-active / takeover-escalated / recovered-waiting-scheduler-gate / blocked>
+<only active / waiting-hosted / stopped_at_waiting_scheduler_gate / waiting-scheduler / waiting-on-worker / pending-materialization-stalled / worker-stalled / worker-stalled/abandoned / replacement-planned / replacement-active / scheduler-takeover-active / takeover-escalated / recovered-waiting-scheduler-gate / blocked>
 - worker_id:
 - thread_id:
+- pending_worktree_id:
 - issue / PR / task:
 - branch / worksite:
 - head / base:
@@ -64,6 +65,14 @@ Current Workers:
 - next_scheduler_action:
 - next_worker_action:
 
+Facts Consumed Before This Heartbeat:
+- worker_reports:
+- live_pr_or_task_readback:
+- local_git_readback:
+- issue_state:
+- repo_carrier_state:
+- stale_heartbeat_corrected: yes|no
+
 Planned But Not Started:
 <only unstarted items and start conditions>
 
@@ -76,8 +85,19 @@ Heartbeat Action:
 3. If the current batch is complete and readback is clean, create the next dependency-ready worker.
 4. If a worker is blocked, classify root cause and send a precise correction or new objective.
 5. If a recovery/checkpoint prompt expired with no report or no fact change, mark worker-stalled and choose replacement/takeover.
-6. If this prompt is stale or target_thread_id is not scheduler_thread_id, update the automation before further scheduling.
-7. Final readback issue / PR / main or equivalent target state.
+6. If a pending worktree has no readable thread/worksite after short readback, mark pending-materialization-stalled and recreate/recover; do not wait a full heartbeat.
+7. If this prompt is stale or target_thread_id is not scheduler_thread_id, update the automation before further scheduling.
+8. Final readback issue / PR / main or equivalent target state.
+
+Heartbeat Decision:
+- heartbeat_decision: action_taken | valid_wait | global_blocker
+- action_taken: <create_thread | send_message_to_thread | run_scheduler_gate | controlled_merge_readback | mark_worker_stalled | create_replacement_worker | update_heartbeat | none>
+- valid_wait_reason: <same hosted run / active worker recent output / external bounded wait / N/A>
+- effective_progress_subject: <worker thread/run/PR/head or N/A>
+- global_blocker: <classification or N/A>
+- next_owner:
+- next_action_by:
+- next_decision_at:
 ```
 
 ## Update Rules / 更新规则
@@ -109,7 +129,30 @@ heartbeat prompt 过期或挂错 target 时，先更新或删除 automation，�
 5. worker 处于 `worker-stalled` 时，不再重复 stale readback；默认创建 replacement worker，只允许短程 scheduler takeover 确认现场。
 6. recovery/checkpoint prompt 后仍无 report 或事实无变化时，立即升级 `worker-stalled`。
 7. scheduler 处于 `scheduler-takeover-active` 且需要 commit/push/hosted checks/完整验证/语义修复时，提示 role drift，改为 `takeover-escalated` 并创建 replacement worker。
-8. 所有 worker idle/blocked/waiting 且 Top Goal incomplete 时，选择最高优先级 blocker 并行动。
-9. worker 必须行动时，使用 cross-thread messaging。
-10. 恢复 blocked/complete worker 时，发送 new exact objective，并要求 `create_goal` + `get_goal` self-check。
-11. 不要写一个看起来像 worker 已收到的 scheduler-thread reply。
+8. 创建 worker 返回 `pendingWorktreeId` 后，立即短轮询确认 thread/worksite/startup report。未物化时标记 `pending-materialization-stalled`，并重建/恢复 worker 或记录真实 tool/global blocker。
+9. 所有 worker idle/blocked/waiting 且 Top Goal incomplete 时，选择最高优先级 blocker 并行动。
+10. worker 必须行动时，使用 cross-thread messaging。
+11. 恢复 blocked/complete worker 时，发送 new exact objective，并要求 `create_goal` + `get_goal` self-check。
+12. 不要写一个看起来像 worker 已收到的 scheduler-thread reply。
+
+## Turn Completion Contract / 唤醒收尾契约
+
+Top Goal incomplete 时，heartbeat turn 的 final response 不能只是状态摘要。必须输出并满足：
+
+```text
+Heartbeat Decision:
+- heartbeat_decision: action_taken | valid_wait | global_blocker
+- action_taken:
+- valid_wait_reason:
+- effective_progress_subject:
+- global_blocker:
+- next_owner:
+- next_action_by:
+- next_decision_at:
+```
+
+有效 `action_taken` 必须是已经发生的调度 side effect：创建/恢复 worker、发送 worker 指令、运行/授权 gate、标记 stalled、创建 replacement、controlled merge/readback、修正 heartbeat target 或更新过期 heartbeat。只写“下一步要做”不算。
+
+有效 `valid_wait` 必须证明等待对象仍在推进：active worker 最近有输出、同一 hosted run 仍在运行、外部锁/权限/队列处于有界等待。`pendingWorktreeId`、旧 heartbeat summary、已停在 `waiting-scheduler-gate` 的 worker、`worker-stalled` worker 都不是合法等待对象。
+
+如果无法行动也无法合法等待，必须记录 `global_blocker` 和解除条件。否则该 heartbeat 是 scheduler 空转，应立即纠正。
