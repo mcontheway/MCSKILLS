@@ -4,7 +4,8 @@
 
 第一步只读。确认并回报：
 
-- worker id、title、objective、具体 `scheduler_thread_id`。
+- worker id、title、objective、具体 `scheduler_thread_id` 和 `report_to_thread_id`。
+- `instruction_id`、`supersedes_instruction_id`、`expected_report_type` 和 `report_deadline_or_next_heartbeat_decision`。
 - `pwd`、repo root，以及当前目录是否为 assigned worker worksite。
 - branch、HEAD、base branch 或等价 target。
 - `git status` 和 dirty diff。
@@ -15,6 +16,8 @@
 
 任何 locator 缺失或不一致时，先生成 scheduler-readable report 并等待 correction。如果不一致导致无法有意义推进，且已有 goal，则将当前 goal 结束为 `blocked`。
 
+如果 `scheduler_thread_id`、`report_to_thread_id`、`instruction_id` 或 `expected_report_type` 缺失，worker 不得自行推断路由或开始实施。回报 `routing-missing`，`worker_state=waiting-scheduler`，并等待 scheduler correction。
+
 ## Goal Start / 创建 Goal
 
 worksite confirmation 干净后，用 exact delegated objective 创建 worker goal。不要改写、扩写或重新解释 objective。
@@ -22,12 +25,15 @@ worksite confirmation 干净后，用 exact delegated objective 创建 worker go
 立即运行 `get_goal` 并回报：
 
 - confirmed worksite 和 head。
+- `instruction_ack`，包含收到的 `instruction_id` 和 objective digest。
 - `get_goal.objective`。
 - `get_goal.status`。
 - `create_goal` 是否失败，或是否残留 old goal。
 - 是否可以继续执行。
 
 block、complete 或 recover goal 前读取 `goal-lifecycle.md`。
+
+`instruction_ack` 回报后才表示 worker 接受该指令。ACK 不代表 scope complete，也不代表 scheduler 已消费后续 report。
 
 ## Scope Boundaries / 范围边界
 
@@ -53,6 +59,8 @@ block、complete 或 recover goal 前读取 `goal-lifecycle.md`。
 使用这些 table/report states：
 
 - `confirming`：正在确认 worksite 和 goal。
+- `routing-missing`：指令缺少必需路由字段或 `instruction_id`，worker 未开始实施。
+- `instruction-sent-awaiting-ack`：scheduler table state；worker 收到指令但尚未回 ACK 前，不能被 scheduler 当作 active。
 - `active`：正在执行 scoped work。
 - `waiting-hosted`：等待同一 hosted run 或有界 transient retry；通常不是 goal-blocked。
 - `waiting-scheduler-gate`：local validation、metadata readback、hosted checks 和 finding disposition 已干净；scheduler 必须运行或授权下一个 high-cost gate。这不是 worker blocker。
@@ -61,13 +69,14 @@ block、complete 或 recover goal 前读取 `goal-lifecycle.md`。
 - `blocked`：goal 已正式 blocked，或没有 scheduler/external change 就无法继续有意义推进。
 - `complete`：scoped objective 已完成，且 final evidence 已回报。
 
-这些是 scheduler table states，不总是 goal API states。goal API 只按 `goal-lifecycle.md` 使用。
+这些是 scheduler table states，不总是 goal API states。回报时尽量拆开 `worker_state`、`goal_status`、`gate_state` 和 `next_owner`；goal API 只按 `goal-lifecycle.md` 使用。
 
 ## Required Reports / 必要回报
 
 以下节点必须向 scheduler 回报：
 
 - worksite plus goal self-check 完成。
+- 收到 initial/correction/recovery/replacement 指令后的 `instruction_ack`，或缺字段时的 `routing-missing`。
 - local validation 通过。
 - PR/task 创建或更新，且 head/body/payload metadata readback 对齐。
 - hosted checks pending、in progress、passing 或 failing after classification。

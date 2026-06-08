@@ -27,6 +27,10 @@ T1:
 - title:
 - thread_id:
 - pending_worktree_id:
+- last_instruction_id:
+- awaiting_ack_for:
+- last_report_id:
+- last_report_consumed_at:
 - objective:
 - goal_status_reported_by_worker: unknown | active | blocked | complete
 - actual_worksite:
@@ -41,18 +45,20 @@ T1:
 - PR number/state/head/base:
 - issue state:
 - worker_state:
+- goal_status:
+- gate_state:
 - next_owner: scheduler | worker | replacement | external
 - next_action:
 - blocker_classification:
 - last_readback_at:
 - gate_owner: scheduler | worker-authorized
-- state: planned | confirming | pending-materialization-stalled | active | waiting-hosted | stopped_at_waiting_scheduler_gate | waiting-scheduler | waiting-on-worker | worker-stalled | worker-stalled/abandoned | replacement-planned | replacement-active | scheduler-takeover-active | takeover-escalated | recovered-waiting-scheduler-gate | blocked | complete
+- state: planned | confirming | instruction-sent-awaiting-ack | routing-missing | pending-materialization-stalled | active | waiting-hosted | stopped_at_waiting_scheduler_gate | waiting-scheduler | waiting-on-worker | worker-stalled | worker-stalled/abandoned | replacement-planned | replacement-active | scheduler-takeover-active | takeover-escalated | recovered-waiting-scheduler-gate | blocked | complete
 - blocker:
 - next_worker_action:
 - next_scheduler_action:
 ```
 
-每次 worker report、hosted check readback、gate result、merge、blocker triage 和 closeout event 后都要更新。
+每次 worker report、hosted check readback、gate result、merge、blocker triage 和 closeout event 后都要更新。消费 worker report 时必须登记 `report_consumed`，包括 `report_id`、`report_state`、`consumed_at`、`table_updated` 和 `next_owner`。
 
 事实冲突优先级：live host/local git readback > repo carrier current files > newest scheduler-authored state > newest worker report > older heartbeat summary。旧 heartbeat 不得覆盖 newer readback。
 
@@ -138,6 +144,9 @@ detached HEAD at base/main 可以是 worktree 初始化的正常中间态。若 
 
 - worker id，以及创建后可得的具体 `worker_thread_id`。
 - 具体 `scheduler_thread_id`；不要写 "current scheduler thread"。
+- 具体 `report_to_thread_id`，通常等于 `scheduler_thread_id`。
+- 唯一 `instruction_id`，格式建议 `<worker-id>-<kind>-<YYYYMMDDHHMM>`；替代旧指令时填写 `supersedes_instruction_id`。
+- `expected_report_type` 和 `report_deadline_or_next_heartbeat_decision`。
 - 标准标题：`[<Project/Round>][T3][<unit-range>][PR#123] short task name`。
 - exact objective。
 - project/root 和 actual worker worksite。
@@ -152,7 +161,7 @@ model/reasoning 默认规则：
 - 机械 lookup、formatting、inventory 或低风险 read-only checks：使用快速低成本模型 + `low` reasoning。
 - 如果环境不能显式选择 model 或 reasoning，在 dispatch table 中记录限制，并提高 review/validation 强度。
 
-创建后立即登记 thread id。若有 title 工具，立即 set/rename；否则在 prompt 和 dispatch table 中保留标准标题。
+创建后立即登记 thread id 和 `instruction_id`。若有 title 工具，立即 set/rename；否则在 prompt 和 dispatch table 中保留标准标题。worker 回 `instruction_ack` 或 startup report 前，状态只能是 `instruction-sent-awaiting-ack` 或 `confirming`，不能标记为 `active`。
 
 `pendingWorktreeId` 只表示创建请求已排队，不表示 worker 已经存在。scheduler 必须在创建后短轮询确认：
 
@@ -186,6 +195,19 @@ model/reasoning 默认规则：
 
 worker 必须行动时，使用 `send_message_to_thread`。写在 scheduler thread 里的本地判断不是 worker 指令。
 
+任何会改变 worker 行动的 initial/correction/recovery/replacement prompt 都必须包含：
+
+```text
+instruction_id:
+supersedes_instruction_id: <id or N/A>
+scheduler_thread_id:
+report_to_thread_id:
+expected_report_type:
+report_deadline_or_next_heartbeat_decision:
+```
+
+scheduler 发送后在 table 标记 `instruction-sent-awaiting-ack`。worker 的 `instruction_ack` 或 startup/recovery report 到达前，不得把 worker 标为 `active`，不得声称该指令已被 worker 理解或执行。下一次 heartbeat 仍无 ACK 时，必须重发、纠正路由、创建 replacement，或标记为 classified tool/global blocker。
+
 正确的 scheduler-local note：
 
 ```text
@@ -198,6 +220,10 @@ Next: wait for the hosted run; do not rerun.
 
 ```text
 T2, scheduler decision:
+instruction_id: T2-correction-<timestamp>
+scheduler_thread_id: <scheduler_thread_id>
+report_to_thread_id: <scheduler_thread_id>
+expected_report_type: correction-result
 Continue triage with these boundaries:
 - Preserve fail-closed semantics.
 - Do not weaken stale review or head binding.
@@ -206,6 +232,24 @@ Continue triage with these boundaries:
 ```
 
 scheduler-worker message 默认使用用户当前语言；scheduler 明确切换语言时除外。字段名、命令、日志和错误文本可保留原语言。
+
+## Report Consumption / 回报消费
+
+scheduler 读取 worker report 后，必须在 scheduler thread 或 fact table 记录：
+
+```text
+report_consumed:
+- worker_id:
+- worker_thread_id:
+- report_id:
+- report_for_instruction_id:
+- report_state:
+- consumed_at:
+- table_updated: yes | no
+- next_owner:
+```
+
+没有 `report_consumed` 时，不得把 worker report 视为已经驱动了 table transition。若 report 缺 `report_id` 或 `report_for_instruction_id`，scheduler 可以消费事实，但必须标记 `report_id_missing` 并在下一条 correction 中要求补齐。
 
 ## Blocker And Dependency Triage / 阻塞与依赖分类
 

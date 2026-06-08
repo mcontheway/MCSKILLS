@@ -7,6 +7,11 @@ Worker identity:
 - worker id: <Tn>
 - worker_thread_id: <worker-thread-id if known>
 - scheduler_thread_id: <concrete scheduler thread id>
+- report_to_thread_id: <scheduler_thread_id>
+- instruction_id: <Tn-initial-YYYYMMDDHHMM>
+- supersedes_instruction_id: N/A
+- expected_report_type: instruction_ack_then_startup_report
+- report_deadline_or_next_heartbeat_decision: <if no ack/report by next heartbeat, treat as instruction unacknowledged>
 - title: [<Project/Round>][<Tn>][<units>][<PR/Task>] <short task>
 - model/reasoning: <default gpt-5.5 + high for complex/high-risk/shared-contract/gate work; lower only for low-risk read-only or mechanical work>
 
@@ -27,6 +32,7 @@ First action:
 Read-only confirm worksite, branch, HEAD, base, status, PR/task metadata, and issue/task state. If the Codex-managed worker worksite is detached at base/main, this may be normal; switch to the assigned branch only inside the worker worksite and only if authorized here.
 
 If the worksite is consistent, create a goal with the exact objective above, immediately run get_goal, and report objective/status to scheduler_thread_id.
+First report must include `instruction_ack` with `instruction_id`, `report_id`, `worker_state`, `goal_status`, and `gate_state`.
 
 Do not write project/root main worktree. Do not expand scope. Do not run guardian/formal review/controlled merge/closeout unless explicitly authorized for the current head.
 ```
@@ -35,6 +41,12 @@ Do not write project/root main worktree. Do not expand scope. Do not run guardia
 
 ```text
 <Worker id>, scheduler decision:
+instruction_id: <worker-id-correction-YYYYMMDDHHMM>
+supersedes_instruction_id: <prior instruction id or N/A>
+scheduler_thread_id: <scheduler thread id>
+report_to_thread_id: <scheduler_thread_id>
+expected_report_type: instruction_ack_then_correction_result
+report_deadline_or_next_heartbeat_decision: <if no ack/report by next heartbeat, mark instruction unacknowledged and recover>
 Current state: <state>
 Correction objective/boundary:
 - <specific correction>
@@ -46,20 +58,30 @@ Do not:
 - <forbidden actions>
 
 Report back with:
+- instruction_ack:
 - worksite/head:
 - validation:
 - metadata/readback:
+- report_id:
+- report_for_instruction_id:
 - blocker or next scheduler action:
 ```
 
 ## Recovery Prompt For Blocked/Complete Goal / 恢复 Prompt
 
 ```text
+instruction_id: <worker-id-recovery-YYYYMMDDHHMM>
+supersedes_instruction_id: <prior instruction id or N/A>
+scheduler_thread_id: <scheduler thread id>
+report_to_thread_id: <scheduler_thread_id>
+expected_report_type: instruction_ack_then_new_goal_report
+report_deadline_or_next_heartbeat_decision: <if no ack/report by next heartbeat, mark worker-stalled or create replacement>
+
 Your previous goal is blocked/complete. The API cannot resume or edit it.
 Create a new goal with this exact objective:
 "<new exact objective>"
 
-After creation, run get_goal and report objective/status to scheduler_thread_id. Do not treat the old goal as active.
+After creation, run get_goal and report objective/status to report_to_thread_id. Include `instruction_ack`, `report_id`, `report_for_instruction_id`, `worker_state`, `goal_status`, and `gate_state`. Do not treat the old goal as active.
 ```
 
 ## Recovery Checkpoint Record / 恢复检查点记录
@@ -68,6 +90,8 @@ After creation, run get_goal and report objective/status to scheduler_thread_id.
 recovery_prompt:
 - worker_id:
 - thread_id:
+- instruction_id:
+- supersedes_instruction_id:
 - sent_at:
 - expected_report_type: <worksite/head report | rebase result | metadata repair readback | validation result>
 - target_head:
@@ -84,6 +108,10 @@ Worker identity:
 - replaces worker id/thread_id: <stalled worker>
 - scheduler_thread_id: <scheduler thread id>
 - report_to_thread_id: <scheduler_thread_id>
+- instruction_id: <replacement-id-recovery-YYYYMMDDHHMM>
+- supersedes_instruction_id: <stalled worker instruction id or N/A>
+- expected_report_type: instruction_ack_then_recovered_waiting_scheduler_gate
+- report_deadline_or_next_heartbeat_decision: <if no ack/report by next heartbeat, classify replacement startup failure>
 - title: [<Project/Round>][<replacement id>][Recovery][<PR/Task>] <short task>
 
 Objective:
@@ -106,6 +134,64 @@ Boundaries:
 - gate_owner: scheduler
 
 Report `recovered-waiting-scheduler-gate` when recovery is complete, head/base/body are read back, and hosted checks are green.
+Every report must include `report_id` and `report_for_instruction_id`.
+```
+
+## Instruction Ack / 指令 ACK
+
+```text
+Scheduler Report:
+Worker: <worker_id>
+Thread: <worker_thread_id>
+State: <confirming | routing-missing | active>
+instruction_ack:
+- received_from_scheduler_thread_id:
+- report_to_thread_id:
+- instruction_id:
+- supersedes_instruction_id:
+- accepted: yes | no
+- objective_digest:
+- worker_state:
+- goal_status:
+- gate_state:
+- first_action:
+- missing_fields: <none or list>
+report_id: <worker-id-ack-YYYYMMDDHHMM>
+report_for_instruction_id: <instruction_id>
+Next scheduler action: <consume ack | send routing correction>
+```
+
+## Report Consumed Receipt / 回报消费回执
+
+```text
+Scheduler Report:
+report_consumed:
+- worker_id:
+- worker_thread_id:
+- report_id:
+- report_for_instruction_id:
+- report_state:
+- consumed_at:
+- table_updated: yes | no
+- next_owner:
+```
+
+## Routing Missing Report / 路由缺失回报
+
+```text
+Scheduler Report:
+Worker: <worker_id>
+State: routing-missing
+instruction_ack:
+- instruction_id: <missing or value>
+- accepted: no
+- missing_fields: <scheduler_thread_id | report_to_thread_id | instruction_id | expected_report_type>
+report_id:
+worker_state: waiting-scheduler
+goal_status: <N/A | active | blocked>
+gate_state: N/A
+Next scheduler action: resend correction with required routing fields
+Next worker action: waiting
 ```
 
 ## Pending Materialization Stalled Record / Worker 物化失败记录
@@ -195,6 +281,10 @@ Scheduler Fact Table:
 - worker_id:
 - thread_id:
 - pending_worktree_id:
+- last_instruction_id:
+- awaiting_ack_for:
+- last_report_id:
+- last_report_consumed_at:
 - worksite:
 - branch:
 - base_sha:
@@ -203,6 +293,8 @@ Scheduler Fact Table:
 - PR number/state/head/base:
 - issue state:
 - worker_state:
+- goal_status:
+- gate_state:
 - next_owner:
 - next_action:
 - blocker_classification:
@@ -252,7 +344,13 @@ Rerun allowed before classification: no
   <input>
   Worker: <worker_id>
   Unit: <issue / PR / task>
-  State: <active | waiting-hosted | waiting-scheduler-gate | blocked | complete>
+  State: <confirming | routing-missing | active | waiting-hosted | waiting-scheduler-gate | blocked | complete>
+  instruction_id: <id or N/A>
+  report_id: <id>
+  report_for_instruction_id: <id or N/A>
+  worker_state: <state>
+  goal_status: <unknown/active/blocked/complete/N/A>
+  gate_state: <state/N/A>
   PR: <url or N/A>
   Head: <head_sha>
   Base: <base_sha>
@@ -272,6 +370,12 @@ Rerun allowed before classification: no
 Scheduler Report:
 Worker: <worker_id>
 State: waiting-scheduler-gate
+instruction_id: <id>
+report_id: <id>
+report_for_instruction_id: <id>
+worker_state: waiting-scheduler-gate
+goal_status: active
+gate_state: ready-for-scheduler
 Worksite: <path>
 Branch: <branch>
 Head: <head_sha>
@@ -300,6 +404,10 @@ Current Workers:
 - worker_id:
 - thread_id:
 - pending_worktree_id:
+- last_instruction_id:
+- awaiting_ack_for:
+- last_report_id:
+- last_report_consumed_at:
 - branch / worksite:
 - head / base:
 - state:
@@ -327,7 +435,8 @@ Heartbeat Action:
 3. If blocked, classify root cause and send a correction or new objective.
 4. If current batch is complete, create the next dependency-ready worker.
 5. If a pending worktree has no readable thread/worksite after short readback, mark pending-materialization-stalled and recreate/recover.
-6. If prompt is stale, update automation before more scheduling.
+6. If instruction-sent-awaiting-ack has no ack by this heartbeat, resend/correct routing/recover; do not mark active.
+7. If prompt is stale, update automation before more scheduling.
 
 Heartbeat Decision:
 - heartbeat_decision: action_taken | valid_wait | global_blocker
