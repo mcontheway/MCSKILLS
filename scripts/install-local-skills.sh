@@ -70,6 +70,19 @@ if [[ ! -f "$validator" ]]; then
   exit 1
 fi
 
+if [[ "${#requested_skills[@]}" -gt 0 ]]; then
+  missing_skills=()
+  for requested in "${requested_skills[@]}"; do
+    if [[ ! -f "$repo_root/skills/$requested/SKILL.md" ]]; then
+      missing_skills+=("$requested")
+    fi
+  done
+  if [[ "${#missing_skills[@]}" -gt 0 ]]; then
+    echo "requested skill(s) not found under $repo_root/skills: ${missing_skills[*]}" >&2
+    exit 1
+  fi
+fi
+
 run() {
   if [[ "$dry_run" -eq 1 ]]; then
     printf 'DRY RUN:'
