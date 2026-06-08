@@ -62,6 +62,58 @@ Create a new goal with this exact objective:
 After creation, run get_goal and report objective/status to scheduler_thread_id. Do not treat the old goal as active.
 ```
 
+## Recovery Checkpoint Record / 恢复检查点记录
+
+```text
+recovery_prompt:
+- worker_id:
+- thread_id:
+- sent_at:
+- expected_report_type: <worksite/head report | rebase result | metadata repair readback | validation result>
+- target_head:
+- target_base:
+- target_pr_or_task:
+- next_heartbeat_decision: if no scheduler-readable report or no fact change, mark worker-stalled
+```
+
+## Replacement Worker Prompt / 替换 Worker Prompt
+
+```text
+Worker identity:
+- worker id: <replacement id>
+- replaces worker id/thread_id: <stalled worker>
+- scheduler_thread_id: <scheduler thread id>
+- title: [<Project/Round>][<replacement id>][Recovery][<PR/Task>] <short task>
+
+Objective:
+"<exact recovery objective: rebase / metadata repair / validation / PR body readback / push only>"
+
+Boundaries:
+- state starts as replacement-planned, then replacement-active after worksite + goal self-check
+- allowed write paths:
+- forbidden: expand original scope, run guardian/formal review/controlled merge, modify unrelated units
+- gate_owner: scheduler
+
+Report `recovered-waiting-scheduler-gate` when recovery is complete, head/base/body are read back, and hosted checks are green.
+```
+
+## Scheduler Takeover Report / Scheduler 接管回报
+
+```text
+Scheduler Report:
+State: scheduler-takeover-active
+Original worker: <worker_id / thread_id>
+Reason: worker-stalled
+Concurrent writes: <none confirmed>
+Worktree status: <clean, no rebase/merge/cherry-pick>
+Branch/head/PR alignment: <branch / head / base / PR>
+Recovery scope: <rebase / metadata repair / validation / push only>
+Validation: <commands and result>
+PR body readback: <aligned / mismatch>
+Hosted checks: <green / pending / failed>
+Next scheduler action: <run scheduler-owned gate | create replacement | classify blocker>
+```
+
 ## Delegation Fallback / 委派兜底
 
 ```xml
