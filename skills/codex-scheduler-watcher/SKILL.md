@@ -1,13 +1,13 @@
 ---
 name: codex-scheduler-watcher
-description: 创建或更新 Codex meta-scheduler watcher automation。用于为一个项目、milestone、parent issue、issue set、pull request、PR set、release、repo carrier 或手工目标维护 coordination unit graph、scheduler pool 和 scheduler 生命周期；在安全并行时创建多个 scheduler thread，在 scheduler 缺失、失联、阻塞、完成或需要切换 unit 时行动。默认中文说明和回报，可适配用户语言；协议字段、状态枚举、工具名和结构化模板字段保持机器可读。
+description: 创建或更新 Codex meta-scheduler watcher automation。用于为一个项目、milestone、parent issue、issue set、pull request、PR set、release、repo carrier 或手工目标维护 coordination unit graph、scheduler pool 和调度线程生命周期；在安全并行时创建多个 scheduler thread，在 scheduler 缺失、失联、阻塞、完成或需要切换 unit 时行动。默认中文说明和回报，可适配用户语言；协议字段、状态枚举、工具名和结构化模板字段保持机器可读。
 ---
 
 # Codex Scheduler Watcher
 
 ## 概览
 
-本 skill 用于创建 **meta-scheduler watcher**。它是 scheduler 的 scheduler，但只调度 scheduler 生命周期，不调度 worker。
+本 skill 用于创建 **meta-scheduler watcher**。它是 scheduler 的 scheduler，但只编排调度线程生命周期，不调度 worker。
 
 watcher 拥有 coordination unit graph、scheduler pool、unit cursor、跨 scheduler ownership locks 和下一批 scheduler 启动判断。scheduler 仍然拥有单个 coordination unit 内的 global goal、worker、PR、gate、merge、readback 和 closeout。
 
