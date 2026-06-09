@@ -2,16 +2,17 @@
 
 ## Coordination Unit / 调度单元
 
-coordination unit 是 meta-scheduler watcher 管理的最小调度单元。它可以是 milestone、parent issue、issue set、release、phase、repo carrier 或用户手工目标。
+coordination unit 是 meta-scheduler watcher 管理的最小调度单元。它可以是 milestone、parent issue、issue set、pull request、PR set、release、phase、repo carrier 或用户手工目标。
 
 推荐字段：
 
 ```text
 unit:
 - unit_id:
-- unit_type: milestone | parent_issue | issue_set | project_view | release | phase | repo_carrier | manual_goal
+- unit_type: milestone | parent_issue | issue_set | pull_request | pull_request_set | project_view | release | phase | repo_carrier | manual_goal
 - title:
 - source_locator:
+- upstream_source_locator:
 - completion_predicate:
 - scheduler_thread_id:
 - scheduler_heartbeat_id:

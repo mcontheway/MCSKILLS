@@ -8,6 +8,7 @@ unit_graph:
   unit_type:
   title:
   source_locator:
+  upstream_source_locator:
   dependencies:
   downstream_units:
   owned_paths:
@@ -38,6 +39,17 @@ parallel_decision:
 - reason:
 ```
 
+## Provider Gap / 来源不足报告
+
+```text
+provider_gap:
+- attempted_provider:
+- missing_facts:
+- why_completion_predicate_cannot_be_proven:
+- minimum_user_input_needed:
+- recommended_next_step: provide_facts | authorize_planning_scheduler
+```
+
 ## Scheduler Initial Prompt / Scheduler 初始提示
 
 ```text
@@ -52,6 +64,7 @@ unit:
 - unit_type:
 - title:
 - source_locator:
+- upstream_source_locator:
 - completion_predicate:
 
 scheduler_thread_id:
